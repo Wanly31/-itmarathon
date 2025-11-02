@@ -1,16 +1,17 @@
 ﻿using AutoMapper;
+using Epam.ItMarathon.ApiService.Api.Dto.ReadDtos;
 using Epam.ItMarathon.ApiService.Api.Dto.Requests.UserRequests;
 using Epam.ItMarathon.ApiService.Api.Dto.Responses.UserResponses;
 using Epam.ItMarathon.ApiService.Api.Endpoints.Extension;
 using Epam.ItMarathon.ApiService.Api.Endpoints.Extension.SwaggerTagExtension;
 using Epam.ItMarathon.ApiService.Api.Filters.Validation;
 using Epam.ItMarathon.ApiService.Application.Models.Creation;
+using Epam.ItMarathon.ApiService.Application.UseCases.Room.Commands;
+using Epam.ItMarathon.ApiService.Application.UseCases.User.Commands;
+using Epam.ItMarathon.ApiService.Application.UseCases.User.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
-using Epam.ItMarathon.ApiService.Api.Dto.ReadDtos;
-using Epam.ItMarathon.ApiService.Application.UseCases.User.Commands;
-using Epam.ItMarathon.ApiService.Application.UseCases.User.Queries;
 
 namespace Epam.ItMarathon.ApiService.Api.Endpoints
 {
@@ -63,6 +64,17 @@ namespace Epam.ItMarathon.ApiService.Api.Endpoints
                 .WithSummary("Create and add user to a room.")
                 .WithDescription("Return created user info.");
 
+            _ = root.MapDelete("{id:long}", DeleteUserById)
+                .AddEndpointFilterFactory(ValidationFactoryFilter.GetValidationFactory)
+                .Produces<List<UserReadDto>>(StatusCodes.Status200OK)
+                .ProducesProblem(StatusCodes.Status400BadRequest)
+                .ProducesProblem(StatusCodes.Status401Unauthorized)
+                .ProducesProblem(StatusCodes.Status404NotFound)
+                .ProducesProblem(StatusCodes.Status500InternalServerError)
+                .WithSummary("Delete User by user Id.")
+                .WithDescription("Return user delete successful.");
+                
+
             return application;
         }
 
@@ -106,9 +118,7 @@ namespace Epam.ItMarathon.ApiService.Api.Endpoints
                 return result.Error.ValidationProblem();
             }
 
-            var responseUser = mapper.Map<List<UserReadDto>>(new[] { result.Value.First(user => user.Id.Equals(id)) },
-                options => { options.SetUserMappingOptions(result.Value, userCode!); });
-            return Results.Ok(responseUser);
+            return Results.Ok();
         }
 
         /// <summary>
@@ -128,6 +138,28 @@ namespace Epam.ItMarathon.ApiService.Api.Endpoints
             return result.IsFailure
                 ? result.Error.ValidationProblem()
                 : Results.Created(string.Empty, mapper.Map<UserCreationResponse>(result.Value));
+        }
+
+        /// <summary>
+        /// Delete user by id.
+        /// </summary>
+        /// <param name="id">Unique identifier of the User.</param>
+        /// <param name="userCode">User authorization code.</param>
+        /// <param name="mediator">Implementation of <see cref="IMediator"/> for handling business logic.</param>
+        /// <param name="mapper">Implementation of <see cref="IMapper"/> for converting objects.</param>
+        /// <param name="cancellationToken"><see cref="CancellationToken"/> that can be used to cancel operation.</param>
+        /// <returns>Returns <seealso cref="IResult"/> depending on operation result.</returns>
+        public static async Task<IResult> DeleteUserById([FromRoute] ulong id, [FromQuery, Required] string? userCode,
+        IMediator mediator, IMapper mapper, CancellationToken cancellationToken)
+        {
+            var result = await mediator.Send( new DeleteUserByIdRequest { UserCode = userCode!, UserId = id });
+            if (result.IsFailure)
+            {
+                return result.Error.ValidationProblem();
+            }
+
+
+            return Results.Ok(result.Value);
         }
     }
 }

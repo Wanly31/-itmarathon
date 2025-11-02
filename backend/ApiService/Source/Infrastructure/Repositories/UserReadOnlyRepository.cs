@@ -75,6 +75,9 @@ namespace Epam.ItMarathon.ApiService.Infrastructure.Repositories
                 ]))
                 : mapper.Map<List<User>>(usersEf);
             return result;
+
+
+
         }
     }
 }
