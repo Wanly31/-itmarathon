@@ -63,6 +63,7 @@ namespace Epam.ItMarathon.ApiService.Api.Endpoints
                 .WithSummary("Get room by User code and draw it.")
                 .WithDescription("Return admin's gift recipient info.");
 
+
             _ = root.MapPatch("", UpdateRoom)
                 .AddEndpointFilterFactory(ValidationFactoryFilter.GetValidationFactory)
                 .Produces<RoomReadDto>(StatusCodes.Status200OK)
