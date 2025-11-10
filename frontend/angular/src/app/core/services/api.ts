@@ -2,7 +2,7 @@ import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
-import { Endpoint } from '../../app.enum';
+import { Endpoint, EndpointHelper } from '../../app.enum';
 import { BASE_URL } from './tokens/base-url.token';
 import {
   UserDetails,
@@ -94,6 +94,17 @@ export class ApiService {
     return this.#http.patch<RoomDetails>(
       `${this.#baseUrl}${Endpoint.rooms}`,
       payload,
+      { params, observe: 'response' }
+    );
+  }
+  public deleteUserById(
+    id: string,
+    userCode: string
+  ): Observable<HttpResponse<string>> {
+    const params = new HttpParams().set('userCode', userCode);
+
+    return this.#http.delete<string>(
+      `${this.#baseUrl}${EndpointHelper.DeleteUserById(id)}`,
       { params, observe: 'response' }
     );
   }

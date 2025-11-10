@@ -43,6 +43,23 @@ export class UserService {
     );
   }
 
+  public deleteUserById(id: string): Observable<HttpResponse<string>> {
+    return this.#apiService.deleteUserById(id, this.#userCode()).pipe(
+      tap(({ status }) => {
+        if (status === 200) {
+          // оновлюємо список користувачів
+          this.getUsers().subscribe();
+
+          // показуємо повідомлення успіху
+          this.#toasterService.show(
+            ToastMessage.SuccessDeleteUser,
+            MessageType.Success
+          );
+        }
+      })
+    );
+  }
+
   public drawNames(): Observable<HttpResponse<string>> {
     return this.#apiService.drawNames(this.#userCode()).pipe(
       tap(({ status }) => {

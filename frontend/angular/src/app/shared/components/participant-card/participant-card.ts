@@ -58,6 +58,8 @@ export class ParticipantCard {
   public readonly ariaLabelCopy = AriaLabel.ParticipantLink;
   public readonly iconInfo = IconName.Info;
   public readonly ariaLabelInfo = AriaLabel.Info;
+  public readonly iconDelete = IconName.Delete;
+  public readonly ariaLabelDelete = AriaLabel.Delete;
 
   @HostBinding('tabindex') tab = 0;
   @HostBinding('class.list-row') rowClass = true;
@@ -166,5 +168,30 @@ export class ParticipantCard {
       },
       true
     );
+  }
+
+  public onDeleteClick(): void {
+    const userId = String(this.participant().id);
+
+    this.#userService.deleteUserById(userId).subscribe({
+      next: ({ status }) => {
+        if (status === 200) {
+          this.#popup.show(
+            this.#host.nativeElement,
+            PopupPosition.Right,
+            { message: 'User deleted successfully', type: MessageType.Success },
+            false
+          );
+        }
+      },
+      error: () => {
+        this.#popup.show(
+          this.#host.nativeElement,
+          PopupPosition.Right,
+          { message: 'Error deleting user', type: MessageType.Error },
+          false
+        );
+      },
+    });
   }
 }
